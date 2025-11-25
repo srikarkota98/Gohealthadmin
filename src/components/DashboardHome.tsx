@@ -1,3 +1,4 @@
+import React from "react";
 import { Users, UtensilsCrossed, DollarSign, MessageSquare, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
