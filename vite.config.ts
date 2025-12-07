@@ -54,7 +54,15 @@
       outDir: 'build',
     },
     server: {
-      port: 3000,
+      port: 3020,
       open: true,
+      proxy: {
+        '/api': {
+          target: 'https://api.gohelth.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+          secure: true,
+        },
+      },
     },
   });
