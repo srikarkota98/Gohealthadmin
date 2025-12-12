@@ -1,3 +1,4 @@
+import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { DashboardLayout } from "../components/DashboardLayout";
 import { DashboardHome } from "../components/DashboardHome";
@@ -6,18 +7,29 @@ import { MealPlans } from "../components/MealPlans";
 import { MessageLogs } from "../components/MessageLogs";
 import { Payments } from "../components/Payments";
 import { Settings } from "../components/Settings";
+import { ProtectedRoute } from "../components/ProtectedRoute";
+import { Login } from "../components/Login";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    Component: DashboardLayout,
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    element: <ProtectedRoute />,
     children: [
-      { index: true, Component: DashboardHome },
-      { path: "users", Component: Users },
-      { path: "meal-plans", Component: MealPlans },
-      { path: "messages", Component: MessageLogs },
-      { path: "payments", Component: Payments },
-      { path: "settings", Component: Settings },
+      {
+        path: "/",
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: <DashboardHome /> },
+          { path: "users", element: <Users /> },
+          { path: "meal-plans", element: <MealPlans /> },
+          { path: "messages", element: <MessageLogs /> },
+          { path: "payments", element: <Payments /> },
+          { path: "settings", element: <Settings /> },
+        ],
+      },
     ],
   },
 ]);

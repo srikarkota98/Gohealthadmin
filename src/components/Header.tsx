@@ -1,10 +1,19 @@
-import { Search, Bell, Menu } from "lucide-react";
+import React from "react";
+import { Search, Bell, Menu, LogOut } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Badge } from "./ui/badge";
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
       <div className="flex items-center gap-4 p-4 md:px-6">
@@ -51,6 +60,17 @@ export function Header() {
             AD
           </AvatarFallback>
         </Avatar>
+
+        {/* Logout */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="inline-flex"
+          onClick={handleLogout}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </Button>
       </div>
     </header>
   );

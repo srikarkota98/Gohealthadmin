@@ -104,6 +104,7 @@ export function Users() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile Number</TableHead>
                   <TableHead>Meal Id</TableHead>
@@ -121,6 +122,7 @@ export function Users() {
                 ) : (
                   usersArray.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell className="text-slate-600">{user.id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
@@ -130,7 +132,7 @@ export function Users() {
                     </div>
                   </TableCell>
                   <TableCell className="text-slate-600">{user.mobile_number}</TableCell>
-                  <TableCell className="text-slate-600">{user.meal_id}</TableCell>
+                  <TableCell className="text-slate-600"> {user.meal_id || "N/A"}</TableCell>
                   <TableCell className="text-slate-600">
                     {new Date(user.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -179,6 +181,7 @@ export function Users() {
                   {user.full_name.split(" ").map(n => n[0]).join("").toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
+                  <p className="text-slate-900 mb-1">{user.id}</p>
                   <p className="text-slate-900 mb-1">{user.full_name}</p>
                   <p className="text-slate-500 truncate mb-2">{user.mobile_number}</p>
                   <p className="text-slate-500 truncate mb-2">{user.meal_id}</p>
