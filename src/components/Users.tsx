@@ -21,6 +21,10 @@ import api from "../utils/axios";
 
 interface User {
   id: number;
+  // Normalized GHID we show in the UI
+  ghid: string;
+  // Raw field coming from API, e.g. "GH00000066"
+  gh_id?: string;
   full_name: string;
   first_name: string;
   last_name: string;
@@ -55,8 +59,14 @@ export function Users() {
           console.warn("API response structure unexpected:", response.data);
           usersData = [];
         }
-        
-        setUsers(usersData);
+
+        // Ensure ghid is always populated from either ghid or gh_id
+        const usersWithGhid: User[] = usersData.map((u) => ({
+          ...u,
+          ghid: (u.ghid as unknown as string) ?? u.gh_id ?? "",
+        }));
+
+        setUsers(usersWithGhid);
         setLoading(false);
       })
       .catch((error) => {
@@ -105,11 +115,11 @@ export function Users() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
+                  <TableHead>GHID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile Number</TableHead>
                   <TableHead>Meal Id</TableHead>
                   <TableHead>Created Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -123,6 +133,7 @@ export function Users() {
                   usersArray.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="text-slate-600">{user.id}</TableCell>
+                  <TableCell className="text-slate-600">{user.ghid}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
@@ -139,20 +150,6 @@ export function Users() {
                       month: 'short',
                       day: 'numeric'
                     })}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit User</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Delete User</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
                   ))
@@ -182,6 +179,7 @@ export function Users() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-slate-900 mb-1">{user.id}</p>
+                  <p className="text-slate-900 mb-1">{user.ghid}</p>
                   <p className="text-slate-900 mb-1">{user.full_name}</p>
                   <p className="text-slate-500 truncate mb-2">{user.mobile_number}</p>
                   <p className="text-slate-500 truncate mb-2">{user.meal_id}</p>
