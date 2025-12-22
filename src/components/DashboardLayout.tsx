@@ -1,9 +1,8 @@
-import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { MobileNav } from "./MobileNav";
 
-export function DashboardLayout() {
+export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Desktop Layout */}
@@ -12,7 +11,7 @@ export function DashboardLayout() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-y-auto p-6">
-            <Outlet />
+            {children}
           </main>
         </div>
       </div>
@@ -21,7 +20,7 @@ export function DashboardLayout() {
       <div className="md:hidden flex flex-col min-h-screen pb-16">
         <Header />
         <main className="flex-1 p-4">
-          <Outlet />
+          {children}
         </main>
         <MobileNav />
       </div>
