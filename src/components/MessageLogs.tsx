@@ -10,74 +10,8 @@ import {
 } from "./ui/table";
 import { useEffect, useState } from "react";
 import api from "../utils/axios";
+import { Pagination } from "../components/Pagination";
 
-
-const messages = [
-  { 
-    id: 1, 
-    message: "Your meal plan has been updated", 
-    user: "Sarah Johnson", 
-    status: "Delivered", 
-    date: "Nov 24, 2025", 
-    time: "09:30 AM" 
-  },
-  { 
-    id: 2, 
-    message: "Weekly nutrition report is ready", 
-    user: "Michael Chen", 
-    status: "Delivered", 
-    date: "Nov 24, 2025", 
-    time: "08:15 AM" 
-  },
-  { 
-    id: 3, 
-    message: "Reminder: Complete your health survey", 
-    user: "Emily Davis", 
-    status: "Read", 
-    date: "Nov 23, 2025", 
-    time: "04:45 PM" 
-  },
-  { 
-    id: 4, 
-    message: "New recipe added to your plan", 
-    user: "James Wilson", 
-    status: "Failed", 
-    date: "Nov 23, 2025", 
-    time: "02:20 PM" 
-  },
-  { 
-    id: 5, 
-    message: "Payment confirmation for Premium plan", 
-    user: "Lisa Anderson", 
-    status: "Delivered", 
-    date: "Nov 23, 2025", 
-    time: "11:00 AM" 
-  },
-  { 
-    id: 6, 
-    message: "Your subscription will renew tomorrow", 
-    user: "David Martinez", 
-    status: "Delivered", 
-    date: "Nov 22, 2025", 
-    time: "03:30 PM" 
-  },
-  { 
-    id: 7, 
-    message: "Welcome to GoHealth!", 
-    user: "Jennifer Taylor", 
-    status: "Read", 
-    date: "Nov 22, 2025", 
-    time: "10:15 AM" 
-  },
-  { 
-    id: 8, 
-    message: "Meal prep tips for this week", 
-    user: "Robert Brown", 
-    status: "Pending", 
-    date: "Nov 21, 2025", 
-    time: "05:00 PM" 
-  },
-];
 
 interface MessageLogResponse {
   ml_id: number;
@@ -88,45 +22,51 @@ interface MessageLogResponse {
   ml_day_number: number;
   ml_day: string;
   ml_type: string;
+  message_status: string;
   ml_message: string;
   createdAt: string;
 }
 
+
 export function MessageLogs() {
   const [messageLogs, setMessageLogs] = useState<MessageLogResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  
+  const PAGE_SIZE = 50;
+  const totalPages = Math.ceil(totalRecords / PAGE_SIZE);
+
+  const start =
+  totalRecords === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+
+  const end =
+  totalRecords === 0 ? 0 : Math.min(page * PAGE_SIZE, totalRecords);
+
+  console.log(start, "start");
+  console.log(end, "end");
+  console.log(totalRecords, "totalRecords");
+
 
   useEffect(() => {
+    setLoading(true);
     api
-      .post("user/message-logs")
+      .post("user/message-logs", {
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
+      })
       .then((response) => {
-        console.log("Meal Plans API Response:", response.data);
+        console.log("Message Logs API Response:", response.data);
 
-        let data: any[] = [];
+        const data: any[] = response.data?.data.getMessageData || [];
+        const total = response.data?.data.totalRecords || 0;
 
-        if (Array.isArray(response.data)) {
-          // Plain array
-          data = response.data;
-        } else if (Array.isArray(response.data?.data)) {
-          // Your case: response.data = { data: [...] }
-          data = response.data.data;
-        } else if (
-          response.data?.data?.mealPlans &&
-          Array.isArray(response.data.data.mealPlans)
-        ) {
-          // Nested under data.mealPlans
-          data = response.data.data.mealPlans;
-        } else {
-          console.warn("Unexpected meal plans API structure:", response.data);
-        }
-
-        // Normalize GH ID so it always lands in gh_id
         const normalized: MessageLogResponse[] = data.map((item) => ({
           ...item,
           gh_id:
             item.gh_id ??
-            item.user_gh_id ??   // ✅ MISSING KEY (main fix)
+            item.user_gh_id ??
             item.ghid ??
             item.ghId ??
             item.GHID ??
@@ -136,10 +76,11 @@ export function MessageLogs() {
         }));
 
         setMessageLogs(normalized);
+        setTotalRecords(total); // ✅ IMPORTANT
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching meal plans:", err);
+        console.error("Failed to load message logs", err);
         setError(
           err.response?.data?.message ||
             err.message ||
@@ -147,7 +88,7 @@ export function MessageLogs() {
         );
         setLoading(false);
       });
-  }, []);
+  }, [page]);
 
   return (
     <div className="space-y-6">
@@ -187,6 +128,7 @@ export function MessageLogs() {
                 <TableHead>Day Number</TableHead>
                 <TableHead>Day</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>CreatedAt</TableHead>
                 <TableHead>Message</TableHead>
               </TableRow>
@@ -208,6 +150,24 @@ export function MessageLogs() {
                     <TableCell>{msg.ml_day_number}</TableCell>
                     <TableCell>{msg.ml_day}</TableCell>
                     <TableCell>{msg.ml_type}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant="outline"
+                        className={`min-w-[90px] justify-center px-2 py-1 text-xs font-medium capitalize
+                          ${
+                            msg.message_status === "read"
+                              ? "border-blue-500 text-blue-700 bg-blue-50"
+                              : msg.message_status === "delivered"
+                              ? "border-green-500 text-green-700 bg-green-50"
+                              : msg.message_status === "sent"
+                              ? "border-slate-400 text-slate-700 bg-slate-50"
+                              : "border-gray-400 text-gray-700 bg-gray-50"
+                          }
+                        `}
+                      >
+                        {msg.message_status ?? "N/A"}
+                      </Badge>
+                    </TableCell>
                     <TableCell>{msg.createdAt}</TableCell>
                     <TableCell>{msg.ml_message}</TableCell>
                   </TableRow>
@@ -216,38 +176,58 @@ export function MessageLogs() {
             </TableBody>
           </Table>
         )}
-        </CardContent>  
 
+        <p className="text-sm text-muted-foreground">
+          Showing <span className="font-medium text-foreground">{start}</span>
+          –
+          <span className="font-medium text-foreground">{end}</span>
+          {" "}of{" "}
+          <span className="font-medium text-foreground">{totalRecords}</span>
+        </p>
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </CardContent>  
+      
       </Card>
 
       {/* Mobile List View */}
       <div className="md:hidden space-y-3">
-        {messages.map((msg) => (
-          <Card key={msg.id} className="border-slate-200">
+        {messageLogs.map((msg) => (
+          <Card key={msg.ml_id} className="border-slate-200">
             <CardContent className="p-4">
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-slate-900 flex-1">{msg.message}</p>
+                  <p className="text-slate-900 flex-1">{msg.ml_message}</p>
                   <Badge variant="outline" className={
-                    msg.status === "Delivered"
+                    msg.message_status === "delivered"
                       ? "border-green-500 text-green-700 bg-green-50"
-                      : msg.status === "Read"
+                      : msg.message_status === "read"
                       ? "border-blue-500 text-blue-700 bg-blue-50"
-                      : msg.status === "Failed"
+                      : msg.message_status === "sent"
                       ? "border-red-500 text-red-700 bg-red-50"
                       : "border-amber-500 text-amber-700 bg-amber-50"
                   }>
-                    {msg.status}
+                    {msg.message_status ?? "N/A"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>{msg.user}</span>
-                  <span>{msg.date} • {msg.time}</span>
+                  <span>{msg.user_full_name}</span>
+                  <span>{msg.createdAt}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
+
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );
